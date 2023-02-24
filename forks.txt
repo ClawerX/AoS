@@ -1,0 +1,4 @@
+name = 'Forks!'
+version = '1'
+author = 'JoJoe Stinky AKA Jason Bonham alii3d.com/blog/ for more maps'
+description = 'Even more island carnage about to happen here'

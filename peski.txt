@@ -1,0 +1,9 @@
+﻿name = 'Peski'
+version = '1.0'
+author = 'Ananas'
+description = ('Djinn, Ali-Baba i belo4ka')
+
+
+extensions = {
+     'water_damage' : 100 
+}

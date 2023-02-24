@@ -1,0 +1,5 @@
+name = 'Rocket Island'
+version = '2.28'
+author = 'Ki11aWi11'
+description = ('Prepared for Launch!')
+extensions = { 'water_damage' : 33, 'launch' : True}

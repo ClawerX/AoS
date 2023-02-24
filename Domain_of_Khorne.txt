@@ -1,0 +1,39 @@
+﻿name = 'Domain_of_Khorne'
+version = '1.1'
+author = 'Hatta'
+description = 'best map'
+extensions = { 'water_damage' : 10 }
+
+from pyspades.constants import *
+from pyspades.server import ServerConnection
+import random
+ 
+def get_entity_location(team, entity_id):
+     if entity_id == BLUE_FLAG:
+         return (153, 281, 10)
+     if entity_id == GREEN_FLAG:
+         return (347, 244, 13)
+     if entity_id == BLUE_BASE:
+         return (159, 263, 13)
+     if entity_id == GREEN_BASE:
+         return (347, 240, 14)
+ 
+def get_spawn_location(connection):
+    if connection.team is connection.protocol.blue_team:
+        x1 = random.randrange(141, 161)
+        y1 = random.randrange(263, 305)
+        z1 = connection.protocol.map.get_z(x1, y1)
+        return (x1, y1, z1)
+    if connection.team is connection.protocol.green_team:
+        x2 = random.randrange(346, 363)
+        y2 = random.randrange(235, 272)
+        z2 = connection.protocol.map.get_z(x2, y2)
+        return (x2, y2, z2)
+
+from pyspades.server import ServerProtocol
+
+def on_map_change(self, map_):
+    if self.daycycle_loop.running:
+        self.daycycle_loop.stop()
+    self.set_fog_color((106, 20, 31)) # r g b
+    return ServerProtocol.on_map_change(self, map_)

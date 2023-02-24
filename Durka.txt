@@ -1,0 +1,116 @@
+name = "Durka"
+version = "0.15.1"
+author = "Bubochka"
+description = "Sbegi iz durki ili vorvis' vnutr', chtoby zahvatit' intel vraga!"
+
+
+from pyspades.constants import *
+import random
+
+def get_entity_location(team, entity_id):
+    if entity_id == BLUE_FLAG:
+        pos = random.randrange(0,2)
+        
+        if pos==0:
+            x = random.randrange(229, 263)
+            y = random.randrange(155, 165)
+            z = team.protocol.map.get_z(x, y)
+        if pos==1:
+            x = random.randrange(318, 348)
+            y = random.randrange(111, 135)
+            z = team.protocol.map.get_z(x, y)
+        return (x, y, z)
+
+    if entity_id == BLUE_BASE:
+        pos = random.randrange(0,2)
+        
+        if pos==0:
+            x = random.randrange(229, 263)
+            y = random.randrange(155, 165)
+            z = team.protocol.map.get_z(x, y)
+        if pos==1:
+            x = random.randrange(318, 348)
+            y = random.randrange(111, 135)
+            z = team.protocol.map.get_z(x, y)
+        return (x, y, z)
+
+    if entity_id == GREEN_FLAG:
+        pos = random.randrange(0,10)
+        
+        if pos==0:
+            x = random.randrange(229, 239)
+            y = random.randrange(291, 330)
+            z = 47
+        if pos==1:
+            x = random.randrange(227, 239)
+            y = random.randrange(276, 289)
+            z = 47
+        if pos==2:
+            x = random.randrange(272, 282)
+            y = random.randrange(291, 324)
+            z = 47
+        if pos==3:
+            x = random.randrange(285, 299)
+            y = random.randrange(292, 306)
+            z = 47
+        if pos==4:
+            x = random.randrange(293, 296)
+            y = random.randrange(282, 306)
+            z = 40
+        if pos==5:
+            x = random.randrange(272, 276)
+            y = random.randrange(302, 330)
+            z = 41
+        if pos==6:
+            x = random.randrange(250, 259)
+            y = random.randrange(272, 277)
+            z = 34
+        if pos==7:
+            x = 255
+            y = 309
+            z = 30
+        if pos==8:
+            x = 226
+            y = 283
+            z = 40
+        if pos==9:
+            x = 238
+            y = 281
+            z = 39
+        return (x, y, z)
+
+    if entity_id == GREEN_BASE:
+        x = random.randrange(247, 282)
+        y = random.randrange(323, 330)
+        z = 58
+        return (x, y, z)
+        
+        
+def get_spawn_location(connection):
+    if connection.team is connection.protocol.blue_team:
+        pos = random.randrange(0,2)
+        
+        if pos==0:
+            x = random.randrange(229, 263)
+            y = random.randrange(155, 165)
+            z = 58
+        if pos==1:
+            x = random.randrange(318, 348)
+            y = random.randrange(111, 135)
+            z = connection.protocol.map.get_z(x, y)
+
+    if connection.team is connection.protocol.green_team:
+        pos = random.randrange(0,2)
+        
+        if pos==0:
+            x = random.randrange(247, 282)
+            y = random.randrange(323, 330)
+            z = 56
+        if pos==1:
+            x = random.randrange(241, 270)
+            y = random.randrange(298, 304)
+            z = 45
+        
+    while connection.protocol.map.get_solid(x, y, z)==False:
+        z+=1
+    return (x, y, z)

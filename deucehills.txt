@@ -1,0 +1,8 @@
+name = 'deucehills'
+version = '1.0'
+author = 'TheGrandmaster'
+extensions = { 'boundary_damage' : {'left' : 0,
+                                    'right' : 512,
+                                    'top' : 160,
+                                    'bottom' : 352,
+                                    'damage': 1 } }

@@ -1,0 +1,33 @@
+name = 'Yoba'
+version = '1.0'
+author = 'Index'
+
+# script
+from pyspades.constants import *
+import random
+
+def get_entity_location(team, entity_id):
+	if entity_id == BLUE_BASE:
+		z = team.protocol.map.get_z(110, 257)
+		return (110, 257, z)
+	if entity_id == GREEN_BASE:
+		z = team.protocol.map.get_z(404, 257)
+		return (404, 257, z)
+
+def get_spawn_location(connection):
+    if connection.team is connection.protocol.blue_team:
+        x = random.randrange(78, 127)
+        y = random.randrange(246, 265)
+        return (x, y, connection.protocol.map.get_z(x, y))
+    if connection.team is connection.protocol.green_team:
+        x = random.randrange(384, 433)
+        y = random.randrange(246, 265)
+        return (x, y, connection.protocol.map.get_z(x, y))
+
+'''def is_indestructable(self, x, y, z):
+    if 249<=x<=261 and 230<=y<=280:
+        if 1<=z<=56:
+            if self.user_blocks is not None:
+                if (x, y, z) not in self.user_blocks:
+                    return True
+    return protocol.is_indestructable(self, x, y, z)'''

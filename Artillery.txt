@@ -1,0 +1,260 @@
+name = 'Artillery'
+author = 'Ki11aWi11 & VladVP'
+version = '1.0'
+description = 'Charge across No Man\'s Land to seize the enemies War Plans! Now with working cannons!'
+
+from pyspades.common import Vertex3, make_color
+from pyspades.contained import BlockAction
+from pyspades.constants import *
+from pyspades.protocol import BaseConnection
+from pyspades.contained import GrenadePacket, BlockAction, SetColor
+from pyspades.server import ServerConnection
+from pyspades.world import Grenade
+from twisted.internet.reactor import callLater
+import random
+
+grenade_packet, block_action, set_color = GrenadePacket(), BlockAction(), SetColor()
+
+cannon_cooldown = 0.1  # seconds
+cannons = [[[1 for x in range(3)] for x in range(2)] for x in range(2)]
+
+def get_entity_location(team, entity_id):
+    if entity_id == BLUE_FLAG:
+        x, y, z = 154, 259, 54
+        return (x, y, z)
+    if entity_id == GREEN_FLAG:
+        x, y, z = 395, 254, 54
+        return (x, y, z)
+    if entity_id == BLUE_BASE:
+        x, y, z = 169, 256, 54
+        return (x, y, z)
+    if entity_id == GREEN_BASE:
+        x, y, z = 342, 255, 54
+        return (x, y, z)
+
+def get_spawn_location(connection):
+    if connection.team is connection.protocol.blue_team:
+        x = random.randrange(138, 179)
+        y = random.randrange(218, 293)
+        return (x, y, connection.protocol.map.get_z(x, y))
+    if connection.team is connection.protocol.green_team:
+        x = random.randrange(342, 395)
+        y = random.randrange(218, 293)
+        return (x, y, connection.protocol.map.get_z(x, y))
+
+def releaseTrigger(self, x, y, z):
+        protocol = self.protocol
+        protocol.map.set_point(x, y, z, (255, 0, 0))
+        set_color.value = make_color(255, 0, 0)
+        set_color.player_id = 32
+        protocol.send_contained(set_color, save=True)
+        block_action.x = x
+        block_action.y = y
+        block_action.z = z
+        block_action.player_id = 32
+        block_action.value = BUILD_BLOCK
+        protocol.send_contained(block_action, save=True)
+
+def on_block_destroy(self, x, y, z, mode):
+    protocol = self.protocol
+    global cannons
+    if z == 51 and self.tool == SPADE_TOOL:
+        if (225 <= y <= 243 and (y - 225) % 9 == 0) or (268 <= y <= 286 and (y - 268) % 9 == 0):
+            if x == 171 and self.team is protocol.blue_team:
+                if mode == SPADE_DESTROY:
+                    return False
+                if y < 255:
+                    row = 0
+                    if 223 <= y <= 227:
+                        cannon = 0
+                    elif 232 <= y <= 236:
+                        cannon = 1
+                    else:
+                        cannon = 2
+                else:
+                    row = 1
+                    if 266 <= y <= 270:
+                        cannon = 0
+                    elif 275 <= y <= 279:
+                        cannon = 1
+                    else:
+                        cannon = 2
+                if cannons[0][row][cannon] == 1:
+                    position = Vertex3(x + 8, y, 51)
+                    grenade = protocol.world.create_object(Grenade, 0.0,
+                    position, None, Vertex3(0, 0, 0))
+                    grenade.name = 'muzzle'
+                    grenade_packet.value = grenade.fuse
+                    grenade_packet.player_id = self.player_id
+                    grenade_packet.position = position.get()
+                    grenade_packet.velocity = grenade.velocity.get()
+                    protocol.send_contained(grenade_packet)
+                    
+                    impact = protocol.map.get_random_point(257,y-4 , 331,y+4)
+                    sx, sy, sz = impact + (protocol.map.get_z(impact[0], impact[1])-1,)
+                    position = Vertex3(sx, sy, sz)
+                    grenade = protocol.world.create_object(Grenade, 0.5,
+                        position, None, Vertex3(0, 0, 0), self.grenade_exploded)
+                    grenade.name = 'shell'
+                    grenade_packet.value = grenade.fuse
+                    grenade_packet.player_id = self.player_id
+                    grenade_packet.position = position.get()
+                    grenade_packet.velocity = grenade.velocity.get()
+                    protocol.send_contained(grenade_packet)
+                    
+                    callLater(cannon_cooldown, releaseTrigger, self, x, y, z)
+                    return ServerConnection.on_block_destroy(self, x, y, z, mode)
+                else:
+                    return ServerConnection.on_block_destroy(self, x, y, z, mode)
+            elif x == 340 and self.team is protocol.green_team:
+                if mode == SPADE_DESTROY:
+                    return False
+                if y < 255:
+                    row = 0
+                    if 223 <= y <= 227:
+                        cannon = 0
+                    elif 232 <= y <= 236:
+                        cannon = 1
+                    else:
+                        cannon = 2
+                else:
+                    row = 1
+                    if 266 <= y <= 270:
+                        cannon = 0
+                    elif 275 <= y <= 279:
+                        cannon = 1
+                    else:
+                        cannon = 2
+                if cannons[1][row][cannon] == 1:
+                    position = Vertex3(x - 8, y, 51)
+                    grenade = protocol.world.create_object(Grenade, 0.0,
+                    position, None, Vertex3(0, 0, 0))
+                    grenade.name = 'muzzle'
+                    grenade_packet.value = grenade.fuse
+                    grenade_packet.player_id = self.player_id
+                    grenade_packet.position = position.get()
+                    grenade_packet.velocity = grenade.velocity.get()
+                    protocol.send_contained(grenade_packet)
+                    
+                    impact = protocol.map.get_random_point(180,y-4 , 254,y+4)
+                    sx, sy, sz = impact + (protocol.map.get_z(impact[0], impact[1])-1,)
+                    position = Vertex3(sx, sy, sz)
+                    grenade = protocol.world.create_object(Grenade, 0.5,
+                        position, None, Vertex3(0, 0, 0), self.grenade_exploded)
+                    grenade.name = 'shell'
+                    grenade_packet.value = grenade.fuse
+                    grenade_packet.player_id = self.player_id
+                    grenade_packet.position = position.get()
+                    grenade_packet.velocity = grenade.velocity.get()
+                    protocol.send_contained(grenade_packet)
+                    
+                    callLater(cannon_cooldown, releaseTrigger, self, x, y, z)
+                    return ServerConnection.on_block_destroy(self, x, y, z, mode)
+                else:
+                    return ServerConnection.on_block_destroy(self, x, y, z, mode)
+    if z >= 50:
+        if (223 <= y <= 245 and (y - 223) % 9 <= 4) or (266 <= y <= 288 and (y - 266) % 9 <= 4):
+            if 170 <= x <= 178 and (self.team is protocol.blue_team or self.tool == WEAPON_TOOL):
+                if y < 255:
+                    row = 0
+                    if 223 <= y <= 227:
+                        cannon = 0
+                    elif 232 <= y <= 236:
+                        cannon = 1
+                    else:
+                        cannon = 2
+                else:
+                    row = 1
+                    if 266 <= y <= 270:
+                        cannon = 0
+                    elif 275 <= y <= 279:
+                        cannon = 1
+                    else:
+                        cannon = 2
+                if cannons[0][row][cannon] == 1:
+                    return False
+            elif 333 <= x <= 341 and (self.team is protocol.green_team or self.tool == WEAPON_TOOL):
+                if y < 255:
+                    row = 0
+                    if 223 <= y <= 227:
+                        cannon = 0
+                    elif 232 <= y <= 236:
+                        cannon = 1
+                    else:
+                        cannon = 2
+                else:
+                    row = 1
+                    if 266 <= y <= 270:
+                        cannon = 0
+                    elif 275 <= y <= 279:
+                        cannon = 1
+                    else:
+                        cannon = 2
+                if cannons[1][row][cannon] == 1:
+                    return False
+    if self.tool == SPADE_TOOL or mode == GRENADE_DESTROY:
+        if 50 <= z <= 52:
+            if (223 <= y <= 245 and (y - 223) % 9 <= 4) or (266 <= y <= 288 and (y - 266) % 9 <= 4):
+                if 170 <= x <= 178 and self.team is protocol.green_team:
+                    if y < 255:
+                        row = 0
+                        if 223 <= y <= 227:
+                            cannon = 0
+                        elif 232 <= y <= 236:
+                            cannon = 1
+                        else:
+                            cannon = 2
+                    else:
+                        row = 1
+                        if 266 <= y <= 270:
+                            cannon = 0
+                        elif 275 <= y <= 279:
+                            cannon = 1
+                        else:
+                            cannon = 2
+                    if cannons[0][row][cannon] == 0:
+                        return ServerConnection.on_block_destroy(self, x, y, z, mode) 
+                    else:
+                        cannons[0][row][cannon] = 0
+                        position = Vertex3(172, 225 + (9 * cannon) + (43 * row), 51)
+                        grenade = protocol.world.create_object(Grenade, 0.0,
+                            position, None, Vertex3(0, 0, 0), self.grenade_exploded)
+                        grenade.name = 'explosion'
+                        grenade_packet.value = grenade.fuse
+                        grenade_packet.player_id = self.player_id
+                        grenade_packet.position = position.get()
+                        grenade_packet.velocity = grenade.velocity.get()
+                        protocol.send_contained(grenade_packet)
+                        return ServerConnection.on_block_destroy(self, x, y, z, mode) 
+                elif 333 <= x <= 341 and self.team is protocol.blue_team:
+                    if y < 255:
+                        row = 0
+                        if 223 <= y <= 227:
+                            cannon = 0
+                        elif 232 <= y <= 236:
+                            cannon = 1
+                        else:
+                            cannon = 2
+                    else:
+                        row = 1
+                        if 266 <= y <= 270:
+                            cannon = 0
+                        elif 275 <= y <= 279:
+                            cannon = 1
+                        else:
+                            cannon = 2
+                    if cannons[1][row][cannon] == 0:
+                        return ServerConnection.on_block_destroy(self, x, y, z, mode) 
+                    else:
+                        cannons[1][row][cannon] = 0
+                        position = Vertex3(339, 225 + (9 * cannon) + (43 * row), 51)
+                        grenade = protocol.world.create_object(Grenade, 0.0,
+                            position, None, Vertex3(0, 0, 0), self.grenade_exploded)
+                        grenade.name = 'explosion'
+                        grenade_packet.value = grenade.fuse
+                        grenade_packet.player_id = self.player_id
+                        grenade_packet.position = position.get()
+                        grenade_packet.velocity = grenade.velocity.get()
+                        protocol.send_contained(grenade_packet)
+                        return ServerConnection.on_block_destroy(self, x, y, z, mode) 
+    return ServerConnection.on_block_destroy(self, x, y, z, mode)
